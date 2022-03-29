@@ -5,7 +5,7 @@
   <body>
     <div>Are you making a gun pose?</div>
     <button type="button" onclick="init()">Start</button>
-    <div><canvas id="canvas"></canvas></div>
+    <div><canvas style="height: min(900px, 80%);" id="canvas"></canvas></div>
     <div id="label-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/pose@0.8/dist/teachablemachine-pose.min.js"></script>
@@ -58,24 +58,33 @@
             // Prediction 2: run input through teachable machine classification model
             const prediction = await model.predict(posenetOutput);
 
+            let posename, maxValue = 0;
             for (let i = 0; i < maxPredictions; i++) {
                 const classPrediction =
                     prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
+                if (prediction[i].probability > maxValue) {
+                  maxValue = prediction[i].probability;
+                  posename = prediction[i].className;
+                }
             }
 
             // finally draw the poses
-            drawPose(pose);
+            drawPose(pose, posename);
         }
 
-        function drawPose(pose) {
+        function drawPose(pose, posename) {
             if (webcam.canvas) {
                 ctx.drawImage(webcam.canvas, 0, 0);
                 // draw the keypoints and skeleton
                 if (pose) {
                     const minPartConfidence = 0.5;
-                    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx);
-                    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx);
+                    const keypointsSize = 4;
+                    const fillColor = "aqua";
+                    const lineWidth = 2;
+                    const strokeColor = posename === "nothing" ? "red" : "aqua";
+                    tmPose.drawKeypoints(pose.keypoints, minPartConfidence, ctx, keypointsSize, fillColor, strokeColor);
+                    tmPose.drawSkeleton(pose.keypoints, minPartConfidence, ctx, lineWidth, strokeColor);
                 }
             }
         }
